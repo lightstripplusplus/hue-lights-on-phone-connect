@@ -1,0 +1,3 @@
+1 18 * * * root /bin/sh /tmp/mnt/scripts/iPhoneLights.sh
+
+Above is a cron job to run iPhoneLights.sh at 6:01PM. This assumes that iPhoneLights.sh is stored at /tmp/root/ on your router.

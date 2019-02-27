@@ -1,4 +1,0 @@
-* 18-23,0-5 * * * root /bin/sh /tmp/root/iPhoneLights.sh ; sleep 15 ; /tmp/root/iPhoneLights.sh ; sleep 15; /tmp/root/iPhoneLights.sh ; sleep 15 ; /tmp/root/iPhoneLights.sh
-
-
-Above is a cron job to run iPhoneLights.sh every 15 seconds between the hours of 6PM and 5AM. This assumes that iPhoneLights.sh is stored at /tmp/root/ on your router.
