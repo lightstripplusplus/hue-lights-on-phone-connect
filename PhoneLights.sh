@@ -33,7 +33,7 @@ rest_time=30
 
 #times between which this script will loop. Input begginning and ending hours in 0-23 format. Where 7 or 07 is 7AM and 23 is 11PM
 #this script is set up for your begin hour to be later than your end hour. Unless you change it, it is set to run between 6PM and 8AM
-#in the time zone your router is set to. If you would like the start time to be before the end time, like 5PM-11PM, see the notes on lines 92 and 93
+#in the time zone your router is set to. If you would like the start time to be before the end time, like 5PM-11PM, see the notes on lines 87 and 88
 begin_at_hour=18
 begin_at_minute=00
 end_at_hour=7
@@ -61,7 +61,6 @@ end_at_time=$((end_at_hour_min + end_at_minute))
 if [ ! -f $home_txt_location/home.txt ]
 then
 	echo "false" > $home_txt_location/home.txt
-	sleep 60
 fi
 
 #checks to see if you're on the network before starting loop
@@ -69,11 +68,7 @@ fi
 if grep -Fq $mac /proc/net/arp
 then
 	phone_ip=$(grep -F $mac /proc/net/arp | awk '{print $1}') #gets the local ip of the trigger device to ping later
-	if grep -Fq "false" $home_txt_location/home.txt #if the home.txt said false, change it to true
-	then
-		echo "true" > $home_txt_location/home.txt
-		sleep 60
-	fi
+	echo "true" > $home_txt_location/home.txt
 fi
 
 #while loop that runs the script continuously
@@ -109,15 +104,16 @@ do
 		if [ $date_check = 0 ]
 		then
 			time_difference=$((current_time - file_time))
+			time_compare=$((time_difference + 1))
 		else
 			time_difference=$((rest_time + 1))
 		fi
 		
 		#checks if the rest_time has elapsed before running the rest of the code
-		rest_check=$((time_difference < rest_time))
+		rest_check=$((time_compare > rest_time))
 		
 		#if the time difference between code execution and the last edit of the home.txt file is greater than the rest period
-		if [ $rest_check = 0 ] 
+		if [ $rest_check = 1 ] 
 		then
 			if grep -Fq "false" $home_txt_location/home.txt #check if home.txt says false
 			then
@@ -127,7 +123,6 @@ do
 					curl -X PUT -d '{"on":true,"ct":369,"bri":100}' http://$bridge_ip/api/$dev_hash/lights/$light_two/state > /dev/nul 2>&1
 					echo "true" > $home_txt_location/home.txt #now that we know you're home, set the home.txt flag to true
 					phone_ip=$(grep -F $mac /proc/net/arp | awk '{print $1}') #gets the local ip address assigned to $mac from the arp table
-					sleep 60
 				else
 					sleep 15
 				fi
@@ -137,11 +132,10 @@ do
 					sleep 15
 				else
 					echo "false" > $home_txt_location/home.txt #if the ping doesn't make a connection set the home.txt file to false
-					sleep 60 #sleep for 1 minute after setting to false because the arp table takes a bit to update that you're offline
 				fi
 			fi
 		else #if the rest_time has not elapsed, the script will sleep until it has elapsed then check to see if you're online
-			sleep_time=$((rest_time - time_difference - 1))
+			sleep_time=$((rest_time - time_difference))
 			sleep_time_sec=$((sleep_time * 60))
 			sleep $sleep_time_sec
 			if grep -Fq $mac /proc/net/arp
@@ -150,11 +144,14 @@ do
 				if grep -Fq "false" $home_txt_location/home.txt #if the home.txt said false, change it to true
 				then
 					echo "true" > $home_txt_location/home.txt
-					sleep 60
+					rest_time_sec=$((rest_time * 60))
+					sleep $rest_time_sec
 				fi
 			fi
 		fi
 	else
+		#resets home.txt to false when script completes so that you do not have to wait out the rest_time the next time it runs
+		echo "false" > $home_txt_location/home.txt
 		break #if outside of the designated start and end times, break out of the while loop and exit the script
 	fi
 done
