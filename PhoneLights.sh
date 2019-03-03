@@ -106,7 +106,7 @@ do
 			time_difference=$((current_time - file_time))
 			time_compare=$((time_difference + 1))
 		else
-			time_difference=$((rest_time + 1))
+			time_compare=$((rest_time + 1))
 		fi
 		
 		#checks if the rest_time has elapsed before running the rest of the code
